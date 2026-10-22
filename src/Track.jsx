@@ -1,0 +1,19 @@
+import {useMemo,useLayoutEffect,useRef} from 'react';
+import {BufferGeometry,Float32BufferAttribute,Object3D} from 'three';
+import {RX,RZ,samples} from './physics';
+export function Instances({items,color,emissive,opacity=1}){const ref=useRef();useLayoutEffect(()=>{const o=new Object3D();items.forEach((p,i)=>{o.position.set(...p.p);o.scale.set(...p.s);o.rotation.set(0,p.r||0,0);o.updateMatrix();ref.current.setMatrixAt(i,o.matrix);});ref.current.instanceMatrix.needsUpdate=true;ref.current.computeBoundingSphere();},[items]);return <instancedMesh ref={ref} args={[null,null,items.length]}><boxGeometry/><meshStandardMaterial color={color} emissive={emissive||'#000000'} emissiveIntensity={emissive?2:0} roughness={.7} transparent={opacity<1} opacity={opacity}/></instancedMesh>;}
+function Ribbon({inner,outer,y,color,emissive,opacity=1,roughness=.7}){const geometry=useMemo(()=>{const g=new BufferGeometry(),pos=[],idx=[];for(let i=0;i<=240;i++){const t=i/240*Math.PI*2;const x=RX*Math.cos(t),z=RZ*Math.sin(t),nx=Math.cos(t)/RX,nz=Math.sin(t)/RZ,len=Math.hypot(nx,nz);for(const off of [inner,outer])pos.push(x+nx/len*off,y,z+nz/len*off);if(i<240){const n=i*2;idx.push(n,n+1,n+2,n+1,n+3,n+2);}}g.setAttribute('position',new Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;},[inner,outer,y]);return <mesh geometry={geometry}><meshStandardMaterial color={color} emissive={emissive||'#000'} emissiveIntensity={2} roughness={roughness} metalness={.15} transparent={opacity<1} opacity={opacity} depthWrite={opacity===1} side={2}/></mesh>;}
+export default function Track(){const objects=useMemo(()=>{const barriers=[],dashes=[],lights=[],poles=[],curbs=[];samples.forEach((p,i)=>{const nx=Math.cos(p.heading),nz=-Math.sin(p.heading);if(i%3===0)dashes.push({p:[p.x,.025,p.z],s:[.16,.025,2.2],r:p.heading});for(const side of [-1,1]){barriers.push({p:[p.x+nx*13*side,.55,p.z+nz*13*side],s:[.32,1.1,3.6],r:p.heading});if(i%2===0)curbs.push({p:[p.x+nx*10.55*side,.055,p.z+nz*10.55*side],s:[.8,.1,1.7],r:p.heading});if(i%16===0){poles.push({p:[p.x+nx*15*side,3.9,p.z+nz*15*side],s:[.16,7.8,.16]});lights.push({p:[p.x+nx*13.8*side,7.8,p.z+nz*13.8*side],s:[3,.12,.35],r:p.heading});}}});return {barriers,dashes,lights,poles,curbs};},[]);
+ const checker=useMemo(()=>Array.from({length:40},(_,i)=>({p:[RX-9.5+i%20,.05,Math.floor(i/20)-.5],s:[1,.04,1],dark:(i+Math.floor(i/20))%2===0})),[]);
+ return <group><mesh rotation={[-Math.PI/2,0,0]} position={[0,-.1,0]}><planeGeometry args={[1800,1800]}/><meshStandardMaterial color="#0b1220"/></mesh>
+ <Ribbon inner={-13} outer={13} y={0} color="#283343"/><Ribbon inner={-10} outer={10} y={.012} color="#252a39" roughness={.48}/>
+ <Ribbon inner={-9.8} outer={-9.64} y={.035} color="#b9e4f0"/><Ribbon inner={9.64} outer={9.8} y={.035} color="#b9e4f0"/>
+ <Ribbon inner={-13.15} outer={-12.85} y={1.12} color="#2bb6f2" emissive="#087aba"/><Ribbon inner={12.85} outer={13.15} y={1.12} color="#b53eeb" emissive="#7c1db4"/>
+ <Ribbon inner={-12.7} outer={-10.9} y={.022} color="#168ecc" emissive="#0a2544" opacity={.16}/><Ribbon inner={10.9} outer={12.7} y={.022} color="#8431ab" emissive="#230a3d" opacity={.16}/>
+ <Instances items={objects.barriers} color="#29324b"/><Instances items={objects.dashes} color="#a6b9c7"/><Instances items={objects.curbs} color="#7054a2"/>
+ <Instances items={objects.poles} color="#344258"/><Instances items={objects.lights} color="#c4efff" emissive="#62bfff"/>
+ <Instances items={checker.filter(p=>!p.dark)} color="#d6e9ed"/><Instances items={checker.filter(p=>p.dark)} color="#10131c"/>
+ <Instances items={[{p:[RX-12,5,0],s:[.5,10,.5]},{p:[RX+12,5,0],s:[.5,10,.5]},{p:[RX,10,0],s:[24,.6,.6]}]} color="#435168"/>
+ <Instances items={[{p:[RX,9.65,.32],s:[20,.12,.04]}]} color="#3ee7ef" emissive="#20d5f0"/>
+ </group>;
+}

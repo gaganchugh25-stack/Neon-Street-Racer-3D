@@ -1,0 +1,5 @@
+import {useEffect} from 'react';
+import {useThree} from '@react-three/fiber';
+import {CubeTexture,PMREMGenerator,SRGBColorSpace} from 'three';
+// Bake six tiny neon panels once; cars reflect them without rendering mirrors.
+export default function NeonEnvironment(){const {gl,scene}=useThree();useEffect(()=>{const faces=Array.from({length:6},(_,i)=>{const canvas=document.createElement('canvas');canvas.width=canvas.height=64;const ctx=canvas.getContext('2d');ctx.fillStyle='#1c2946';ctx.fillRect(0,0,64,64);ctx.fillStyle=i%2?'#a35ee2':'#80d5ee';ctx.fillRect(8,8,7,48);ctx.fillStyle='#9eb8d5';ctx.fillRect(30,5,27,8);return canvas;});const cube=new CubeTexture(faces);cube.colorSpace=SRGBColorSpace;cube.needsUpdate=true;const generator=new PMREMGenerator(gl),map=generator.fromCubemap(cube),previous=scene.environment,previousIntensity=scene.environmentIntensity;scene.environment=map.texture;scene.environmentIntensity=.35;cube.dispose();generator.dispose();return()=>{scene.environment=previous;scene.environmentIntensity=previousIntensity;map.dispose();};},[gl,scene]);return null;}

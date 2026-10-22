@@ -1,0 +1,2 @@
+import {useGame} from './state';
+export default function PerformanceHUD(){const {settings,performance,paused,screen}=useGame();if(!settings.showPerformance)return null;return <aside className="performance-monitor" aria-label="Performance monitor">{paused||screen==='garage'?'Rendering on demand':performance?`${performance.fps} FPS · ${performance.frameMs} ms/frame`:'Measuring frames…'}{performance&&<small>{performance.calls} draw calls · {Math.round(performance.triangles/1000)}k triangles · {performance.slowFrames} slow frames/s</small>}</aside>;}

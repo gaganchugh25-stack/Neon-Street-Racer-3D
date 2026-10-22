@@ -1,0 +1,1 @@
+export default function Loading(){return <div className="boot-loading" role="status"><div className="wordmark"><span>NEON</span><h1>STREET RACER 3D</h1></div><p>Preparing the midnight circuit…</p><span className="loading-track" aria-hidden="true"/><small>Building the cars, track and lights.</small></div>;}
